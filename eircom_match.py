@@ -1,14 +1,7 @@
 from peewee import *
-import re, requests, json
 from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter, Retry
 
 db = SqliteDatabase('eircom.db')
-session = requests.Session()
-retries = Retry(total = 5,
-                backoff_factor = 3,
-                status_forcelist = [ 500, 502, 503, 504 ])
-session.mount('https://www.eirphonebook.ie', HTTPAdapter(max_retries = retries))
 
 class Person(Model):
     id = CharField(max_length = 40, unique = True)
