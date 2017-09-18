@@ -85,6 +85,7 @@ def scrape_county(county):
         if len(person_item_elems) == 0:
             break
         for person_item_elem in person_item_elems:
+            person_count += 1
             item_id = int(person_item_elem['data-number'])
             person_id = person_item_elem['data-id']
             person_name_elem = person_item_elem.find('span', {'id': 'listingbase'+str(item_id)})
@@ -94,13 +95,15 @@ def scrape_county(county):
             person_address = person_address_elem.text.strip()
             no_solicitation_elem = person_item_elem.find('span', {'class': 'no-sollicitation'})
             person_allow_solicitation = no_solicitation_elem == None
-            person_phone_elem = person_item_elem.select('span[class="phone-number"]')[0]
+            person_phone_elem = person_item_elem.select('span[class="phone-number"]')
+            if len(person_phone_elem) == 0: # Doesn't have a phone number associated.
+                continue
+            person_phone_elem = person_phone_elem[0]
             person_phone_number = person_phone_elem.text.strip().replace('(', '').replace(')', '-').replace(' ', '')
             Person.insert(
                 id = person_id, name = person_name, address = person_address,
                 allow_solicitation = person_allow_solicitation, phone_number = person_phone_number
             ).upsert().execute()
-            person_count += 1
         print(str(person_count)+' done so far')
         page_num += 1
 
