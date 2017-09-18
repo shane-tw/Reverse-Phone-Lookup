@@ -72,8 +72,6 @@ def main():
         for county in counties:
             executor.submit(scrape_county, county)
 
-# TODO: Add multi-processing. Otherwise, this ends up taking hours to execute.
-
 def scrape_county(county):
     page_num = 1
     person_count = 0
