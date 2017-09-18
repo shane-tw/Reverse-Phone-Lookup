@@ -7,7 +7,7 @@ class Person(Model):
     id = CharField(max_length = 40, unique = True)
     name = CharField(max_length = 60)
     address = CharField(max_length = 100)
-    allow_sollicitation = BooleanField()
+    allow_solicitation = BooleanField()
     phone_number = CharField(max_length = 16)
 
     class Meta:
@@ -66,7 +66,7 @@ def main():
     print('URL: https://www.eirphonebook.ie/q/name/detail/{}/'.format(person.id))
     print('Name: ' + person.name)
     print('Address: ' + person.address)
-    print('Solicitation allowed: ' + (person.allow_sollicitation and 'yes' or 'no'))
+    print('Solicitation allowed: ' + (person.allow_solicitation and 'yes' or 'no'))
 
 if __name__ == '__main__':
     main()
