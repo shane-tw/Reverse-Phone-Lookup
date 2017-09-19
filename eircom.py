@@ -31,38 +31,17 @@ headers = {
 }
 
 counties = {
-    'Antrim',
-    'Armagh',
-    'Carlow',
-    'Cavan',
-    'Clare',
-    'Cork',
-    'Derry',
-    'Donegal',
-    'Down',
-    'Dublin',
-    'Fermanagh',
-    'Galway',
-    'Kerry',
-    'Kildare',
-    'Kilkenny',
-    'Laois',
-    'Leitrim',
-    'Limerick',
-    'Longford',
-    'Louth',
-    'Mayo',
-    'Meath',
-    'Monaghan',
-    'Offaly',
-    'Roscommon',
-    'Sligo',
-    'Tipperary',
-    'Tyrone',
-    'Waterford',
-    'Westmeath',
-    'Wexford',
-    'Wicklow'
+    'Antrim', 'Armagh', 'Carlow',
+    'Cavan', 'Clare', 'Cork',
+    'Derry', 'Donegal', 'Down',
+    'Dublin', 'Fermanagh', 'Galway',
+    'Kerry', 'Kildare', 'Kilkenny',
+    'Laois', 'Leitrim', 'Limerick',
+    'Longford', 'Louth', 'Mayo',
+    'Meath', 'Monaghan', 'Offaly',
+    'Roscommon', 'Sligo', 'Tipperary',
+    'Tyrone', 'Waterford', 'Westmeath',
+    'Wexford', 'Wicklow'
 }
 
 def main():
@@ -92,37 +71,39 @@ def scrape_county(county):
         retried_empty_count = 0
         for person_item_elem in person_item_elems:
             person_count += 1
-            item_id = int(person_item_elem['data-number'])
-            person_id = person_item_elem['data-id']
-            person_link_elem = person_item_elem.find('a', {'id': 'titlebase' + str(item_id)})
-            person_name_elem = person_item_elem.find('span', {'id': 'listingbase' + str(item_id)})
-            person_name = person_name_elem.text.strip()
-            surname_match = re.match('businessNameClick,,([^,]+),', person_link_elem['data-wt'])
-            if surname_match: # The below code swaps the firstname and surname so they're in the correct order.
-                person_name = re.sub('(' + re.escape(surname_match.group(1)) + ') (.+)', r'\2 \1', person_name)
-            print(person_name)
-            person_address_elem = person_item_elem.find('div', {'class': 'result-address'})
-            person_address = person_address_elem.text.strip()
-            no_solicitation_elem = person_item_elem.find('span', {'class': 'no-sollicitation'})
-            person_allow_solicitation = no_solicitation_elem == None
-            person_phone_elem = person_item_elem.select('span[class="phone-number"]')
-            if len(person_phone_elem) == 0: # Doesn't have a phone number associated.
-                continue
-            person_phone_elem = person_phone_elem[0]
-            person_phone_match = re.match('\((\d+)\)(\d+)', person_phone_elem.text.strip())
-            if not person_phone_match:
-                person_name = person_name_elem.text.strip()
-                continue
-            person_area_code = person_phone_match.group(1)
-            person_phone_number = person_phone_match.group(2)
-            Person.insert(
-                id = person_id, name = person_name, address = person_address, county = county,
-                allow_solicitation = person_allow_solicitation, area_code = person_area_code, phone_number = person_phone_number
-            ).upsert().execute()
+            add_person(person_item_elem)
         print(str(person_count)+' done so far')
         page_num += 1
     db.close()
 
+def add_person(person_item_elem):
+	item_id = int(person_item_elem['data-number'])
+    person_id = person_item_elem['data-id']
+    person_link_elem = person_item_elem.find('a', {'id': 'titlebase' + str(item_id)})
+    person_name_elem = person_item_elem.find('span', {'id': 'listingbase' + str(item_id)})
+    person_name = person_name_elem.text.strip()
+    surname_match = re.match('businessNameClick,,([^,]+),', person_link_elem['data-wt'])
+    if surname_match: # The below code swaps the firstname and surname so they're in the correct order.
+        person_name = re.sub('(' + re.escape(surname_match.group(1)) + ') (.+)', r'\2 \1', person_name)
+    print(person_name)
+    person_address_elem = person_item_elem.find('div', {'class': 'result-address'})
+    person_address = person_address_elem.text.strip()
+    no_solicitation_elem = person_item_elem.find('span', {'class': 'no-sollicitation'})
+    person_allow_solicitation = no_solicitation_elem == None
+    person_phone_elem = person_item_elem.select('span[class="phone-number"]')
+    if len(person_phone_elem) == 0: # Doesn't have a phone number associated.
+        return
+    person_phone_elem = person_phone_elem[0]
+    person_phone_match = re.match('\((\d+)\)(\d+)', person_phone_elem.text.strip())
+    if not person_phone_match:
+        person_name = person_name_elem.text.strip()
+        return
+    person_area_code = person_phone_match.group(1)
+    person_phone_number = person_phone_match.group(2)
+    Person.insert(
+        id = person_id, name = person_name, address = person_address, county = county,
+        allow_solicitation = person_allow_solicitation, area_code = person_area_code, phone_number = person_phone_number
+    ).upsert().execute()
 
 if __name__ == '__main__':
     main()
