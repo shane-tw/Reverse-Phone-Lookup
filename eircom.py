@@ -5,7 +5,7 @@ import re, requests, json
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter, Retry
 
-db = SqliteDatabase('eircom.db')
+db = MySQLDatabase(host = 'localhost', port = 3306, user = 'root', database = 'eircom')
 session = requests.Session()
 retries = Retry(total = 10,
                 backoff_factor = 3,
@@ -66,13 +66,14 @@ counties = {
 }
 
 def main():
-    db.connect()
-    db.create_tables([Person], safe = True)
+    logging.basicConfig(filename='error.log', level=logging.DEBUG)
+    # db.create_tables([Person], safe = True)
     with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for county in counties:
             executor.submit(scrape_county, county)
 
 def scrape_county(county):
+    db.connect()
     page_num = 1
     person_count = 0
     have_retried_empty = False
@@ -121,6 +122,8 @@ def scrape_county(county):
             ).upsert().execute()
         print(str(person_count)+' done so far')
         page_num += 1
+    db.close()
+
 
 if __name__ == '__main__':
     main()

@@ -1,14 +1,17 @@
+import re
 from peewee import *
 from bs4 import BeautifulSoup
 
-db = SqliteDatabase('eircom.db')
+db = MySQLDatabase(host = 'localhost', port = 3306, user = 'root', database = 'eircom')
 
 class Person(Model):
-    id = CharField(max_length = 40, unique = True)
+    id = CharField(max_length = 40, unique = True, primary_key = True)
     name = CharField(max_length = 60)
     address = CharField(max_length = 100)
+    county = CharField(max_length = 12)
     allow_solicitation = BooleanField()
-    phone_number = CharField(max_length = 16)
+    area_code = CharField(max_length = 5)
+    phone_number = CharField(max_length = 12, unique = True)
 
     class Meta:
         database = db
@@ -55,11 +58,11 @@ counties = {
 }
 
 def main():
-    db.connect()
-    db.create_tables([Person], safe = True)
-    phone_number = input('Enter phone number (with hyphen): ').strip().replace('(', '').replace(')', '-').replace(' ', '')
+    #db.create_tables([Person], safe = True)
+    area_code = input('Enter area code: ')
+    phone_number = input('Enter phone number (without area code): ')
     try:
-        person = Person.get(Person.phone_number == phone_number)
+        person = Person.get(Person.area_code == area_code and Person.phone_number == phone_number)
     except Person.DoesNotExist:
         print('No user matches this phone number.')
         return
@@ -69,4 +72,6 @@ def main():
     print('Solicitation allowed: ' + (person.allow_solicitation and 'yes' or 'no'))
 
 if __name__ == '__main__':
+    db.connect()
     main()
+    db.close()
