@@ -77,7 +77,7 @@ def scrape_county(county):
     db.close()
 
 def add_person(person_item_elem):
-	item_id = int(person_item_elem['data-number'])
+    item_id = int(person_item_elem['data-number'])
     person_id = person_item_elem['data-id']
     person_link_elem = person_item_elem.find('a', {'id': 'titlebase' + str(item_id)})
     person_name_elem = person_item_elem.find('span', {'id': 'listingbase' + str(item_id)})
