@@ -66,7 +66,6 @@ counties = {
 }
 
 def main():
-    logging.basicConfig(filename='error.log', level=logging.DEBUG)
     # db.create_tables([Person], safe = True)
     with concurrent.futures.ProcessPoolExecutor(8) as executor:
         for county in counties:
@@ -76,7 +75,7 @@ def scrape_county(county):
     db.connect()
     page_num = 1
     person_count = 0
-    have_retried_empty = False
+    retried_empty_count = 0
     while True:
         request_url = 'https://www.eirphonebook.ie/q/ajax/name?customerType=RESIDENTIAL&where=' + \
                         county + '&page=' + str(page_num) + '&searchType=DOUBLE&sort=az'
@@ -86,11 +85,11 @@ def scrape_county(county):
         soup = BeautifulSoup(response_json['html'], 'html.parser')
         person_item_elems = soup.find_all('div', {'id': re.compile('^itembase\d+$'), 'data-customer': ''})
         if len(person_item_elems) == 0:
-            if not have_retried_empty:
-                have_retried_empty = True
+            if retried_empty_count < 5:
+                retried_empty_count += 1 # Try again, up to 5 times. The server has been known to respond with blank pages randomly.
                 continue
             break
-        have_retried_empty = False
+        retried_empty_count = 0
         for person_item_elem in person_item_elems:
             person_count += 1
             item_id = int(person_item_elem['data-number'])
